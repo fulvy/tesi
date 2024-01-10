@@ -2,6 +2,7 @@ import torch
 import torch.nn.functional as F
 from torch_geometric.data import Data
 from torch_geometric.utils import from_networkx
+from torch.utils.tensorboard import SummaryWriter
 from torch_geometric.transforms import NormalizeFeatures
 from sklearn.datasets import make_moons
 import networkx as nx
@@ -47,7 +48,7 @@ class GNN(torch.nn.Module):
         self.conv2 = SimpleGNNLayer(hidden_dim, output_dim)
 
     def forward(self, x, edge_index):
-        x = F.relu(self.conv1(x, edge_index))
+        x = F.leaky_relu(  self.conv1(x, edge_index))
         x = self.conv2(x, edge_index)
         return F.log_softmax(x, dim=1)
 
