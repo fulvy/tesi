@@ -13,7 +13,7 @@ import pickle as pkl
 plt.gray()  # only for visualization
 
 image = Image.open(
-    "C:\\Users\\fulvi\\PycharmProjects\\tesi\\UBIRISv2\\CLASSES_400_300_Part1\\Iridi\\C1_S1_I13.png").convert("RGB")
+    "C:\\Users\\fulvi\\PycharmProjects\\tesi\\UBIRISv2\\CLASSES_400_300_Part1\\Iridi\\C1_S1_I12.png").convert("RGB")
 
 image = rgb2gray(image)  # grayscale
 plt.imshow(image)
@@ -35,7 +35,7 @@ def discretization(image, n_bins):  # discretazion
 
 image = discretization(image, n_bins)
 
-#plt.gray()
+# plt.gray()
 plt.imshow(image)
 plt.title("immagine discretizzata")
 plt.show()
@@ -49,9 +49,10 @@ result = {'centroide_x': [], 'centroide_y': [], 'bin': [], 'n_comp': [], 'area_r
 for bin in range(n_bins):
     bin_image = image <= bin
     label_image = label(bin_image)
-    feature_image = label2rgb(label_image, image=image <= bin, bg_label=0) # coloro le regioni etichettate
-    # plt.imshow(feature_image)
-    # plt.show()
+    feature_image = label2rgb(label_image, image=image <= bin, bg_label=0)  # coloro le regioni etichettate
+    plt.imshow(feature_image)
+    plt.title(f"regione {bin}")
+    plt.show()
 
     # extract regions properties
     regions = regionprops(label_image)
