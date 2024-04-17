@@ -5,7 +5,8 @@ import pandas as pd
 from PIL import Image
 from skimage.color import label2rgb, rgb2gray
 from skimage.measure import label, regionprops
-from sklearn.neighbors import kneighbors_graph
+from sklearn.neighbors import kneighbors_graph, NearestNeighbors
+from skimage.segmentation import clear_border
 
 import networkx as nx
 import pickle as pkl
@@ -13,7 +14,7 @@ import pickle as pkl
 plt.gray()  # only for visualization
 
 image = Image.open(
-    "C:\\Users\\fulvi\\PycharmProjects\\tesi\\UBIRISv2\\CLASSES_400_300_Part1\\Iridi\\C1_S1_I12.png").convert("RGB")
+    "C:\\Users\\fulvi\\PycharmProjects\\tesi\\UBIRISv2\\CLASSES_400_300_Part1\\Iridi\\C1_S1_I6.png").convert("RGB")
 
 image = rgb2gray(image)  # grayscale
 plt.imshow(image)
@@ -33,6 +34,15 @@ def discretization(image, n_bins):  # discretazion
     return np.digitize(image, bins, right=False)  # associo ogni pixel ad un bin
 
 
+def distance(a, b):  # euclidean distance vd. disegnino
+    translated_a = a
+    translated_b = b
+    translated_a[1] += 1
+    translated_b[1] += 1
+    return np.min([np.linalg.norm(a - b), np.linalg.norm(translated_a - b),
+                   np.linalg.norm(a - translated_b)])
+
+
 image = discretization(image, n_bins)
 
 # plt.gray()
@@ -48,14 +58,17 @@ result = {'centroide_x': [], 'centroide_y': [], 'bin': [], 'n_comp': [], 'area_r
 # extract components
 for bin in range(n_bins):
     bin_image = image <= bin
-    label_image = label(bin_image)
+    cleared_bin_image = clear_border(bin_image)
+    label_image = label(cleared_bin_image)
+    h, w = label_image.shape  # to normalize
     feature_image = label2rgb(label_image, image=image <= bin, bg_label=0)  # coloro le regioni etichettate
-    plt.imshow(feature_image)
-    plt.title(f"regione {bin}")
-    plt.show()
+    #plt.imshow(feature_image)
+    #plt.title(f"regione {bin}")
+    #plt.show()
 
     # extract regions properties
     regions = regionprops(label_image)
+
     for region in regions:
         # area della regione
         region_area = region.area
@@ -72,8 +85,8 @@ for bin in range(n_bins):
         bbox_height = region.bbox[2] - region.bbox[0]
         bbox_width = region.bbox[3] - region.bbox[1]
 
-        node_features[i] = {'centroide_x': region.centroid[0],
-                            'centroide_y': region.centroid[1],
+        node_features[i] = {'centroide_x': region.centroid[0] / h,
+                            'centroide_y': region.centroid[1] / w,
                             'bin': bin,
                             'n_comp': len(regions),
 
@@ -83,8 +96,8 @@ for bin in range(n_bins):
                             'bbox_width': bbox_width
                             }
 
-        result['centroide_x'].append(region.centroid[0])
-        result['centroide_y'].append(region.centroid[1])
+        result['centroide_x'].append(region.centroid[0] / h)
+        result['centroide_y'].append(region.centroid[1] / w)
         result['bin'].append(bin)
         result['n_comp'].append(len(regions))
 
@@ -92,16 +105,20 @@ for bin in range(n_bins):
         result['area_relative_to_bbox'].append(area_relative_to_bbox)
         result['bbox_height'].append(bbox_height)
         result['bbox_width'].append(bbox_width)
-        #  area / dim immagine
-        #  area / area_bbox
-        #  dimensioni height weight ( si ricavano da bbox )
 
 # node features to csv
 res = pd.DataFrame.from_dict(result)
 res.to_csv('result.csv')
 
 # mi prendo le 5 componenti più vicine per costruire il grafo
-graph = kneighbors_graph(res[['centroide_x', 'centroide_y']], n_neighbors=5, mode='distance').toarray().astype(int)
+model = NearestNeighbors(n_neighbors=5, metric=distance)
+model.fit(res[['centroide_x', 'centroide_y']])
+graph = model.kneighbors_graph(res[['centroide_x', 'centroide_y']])
+
+# 0.1 (10% dell'immagine): mi prendo le componenti più vicine a distanza normalizzata di 0.1
+#graph = model.radius_neighbors_graph(res[['centroide_x', 'centroide_y']], radius=0.1)
+
+#graph = kneighbors_graph(res[['centroide_x', 'centroide_y']], n_neighbors=5, mode='distance').toarray().astype(int)
 pd.DataFrame(graph).to_csv('graph.csv', header=False)
 
 # create a graph with networkx
@@ -111,6 +128,7 @@ nx.set_node_attributes(G, node_features)
 # salvo il grafo con pickle
 with open("grafo.nx", 'wb') as f:
     pkl.dump(G, f)
+    #G = pkl.load(f)
     nx.draw(G)
     plt.show()
     print("DONE")
