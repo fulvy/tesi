@@ -96,32 +96,29 @@ with open("grafo.nx", 'wb') as f:
     plt.show()
     print("DONE")
 
-"""
-from stellargraph import StellarGraph
-from stellargraph.data import BiasedRandomWalk
-from stellargraph.embedding import GraphSAGE
 
-with open("grafo.nx", 'rb') as f:
-    G = nx.read_gpickle(f)
 
-#converte il grafo in un oggetto StellarGraph
-G_stellar = StellarGraph.from_networkx(G)
-
-#define graphSAGE model for embedding
-graphsage_model = GraphSAGE(
-    layer_sizes=[128, 128], generator=BiasedRandomWalk(G_stellar), bias=True, dropout=0.5
-)
-
-graphsage_model.train(G_stellar, epochs=5, verbose=2)
-
-#create embedding
-embedding = graphsage_model.get_embedding(G_stellar)
-
-"""
 
 # %%
-import graph2vec
+#import graph2vec
+from graph2vec import Graph2Vec
+
 graphs = [G]
+
+graph2vec_model = Graph2Vec(wl_iterations=2, attributed=False, dimensions=128, workers=4, down_sampling=0.0001,
+                            epochs=10, learning_rate=0.025, min_count=5, seed=42, erase_base_features=False)
+
+# fitto il modello sul  grafo
+graph2vec_model.fit(graph)
+
+# ottengo l'embedding del grafo
+embeddings = graph2vec_model.transform(graph)
+
+
+#%%
+import graph2vec
+
+#graphs = [G]
 
 # embedding del grafo utilizzando Graph2Vec
 model = graph2vec.Graph2Vec()   #Graph2VecTransformer()
