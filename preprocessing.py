@@ -2,30 +2,32 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from PIL import Image
 from skimage.color import label2rgb, rgb2gray
 from skimage.measure import label, regionprops
 from sklearn.neighbors import kneighbors_graph, NearestNeighbors
 from skimage.segmentation import clear_border
 
+from PIL import Image
 import networkx as nx
 import pickle as pkl
 
+#%%
 plt.gray()  # only for visualization
 
 image = Image.open(
-    "C:\\Users\\fulvi\\PycharmProjects\\tesi\\UBIRISv2\\CLASSES_400_300_Part1\\Iridi\\C1_S1_I6.png").convert("RGB")
+    "C:\\Users\\fulvi\\DataspellProjects\\tesi\\UBIRISv2\\CLASSES_400_300_Part1\\Iridi\\C1_S1_I5.png").convert("RGB")
 
 image = rgb2gray(image)  # grayscale
 plt.imshow(image)
 plt.title("iride in grayscale")
 plt.show()
 
+#%%
 n_bins = 13
 i = 0
 node_features = {}
 
-
+#%%
 def discretization(image, n_bins):  # discretazion
 
     imgmax = image.max()
@@ -34,7 +36,7 @@ def discretization(image, n_bins):  # discretazion
     return np.digitize(image, bins, right=False)  # associo ogni pixel ad un bin
 
 
-def distance(a, b):  # euclidean distance vd. disegnino
+def distance(a, b):  # distanza minima tra due punti
     translated_a = a
     translated_b = b
     translated_a[1] += 1
@@ -45,12 +47,11 @@ def distance(a, b):  # euclidean distance vd. disegnino
 
 image = discretization(image, n_bins)
 
-# plt.gray()
 plt.imshow(image)
 plt.title("immagine discretizzata")
 plt.show()
 
-# create a dataset
+# creo il dataset con queste features date da regionprops()
 result = {'centroide_x': [], 'centroide_y': [], 'bin': [], 'n_comp': [], 'area_relative_to_image': [],
           'area_relative_to_bbox': [], 'bbox_height': [], 'bbox_width': []
           }
@@ -58,13 +59,13 @@ result = {'centroide_x': [], 'centroide_y': [], 'bin': [], 'n_comp': [], 'area_r
 # extract components
 for bin in range(n_bins):
     bin_image = image <= bin
-    cleared_bin_image = clear_border(bin_image)
+    cleared_bin_image = clear_border(bin_image)  # pulisco i bordi con clear_border di skimage
     label_image = label(cleared_bin_image)
     h, w = label_image.shape  # to normalize
-    feature_image = label2rgb(label_image, image=image <= bin, bg_label=0)  # coloro le regioni etichettate
-    #plt.imshow(feature_image)
-    #plt.title(f"regione {bin}")
-    #plt.show()
+    feature_image = label2rgb(label_image, image=image <= bin, bg_label=0)  # coloro le regioni etichettate #
+    plt.imshow(feature_image)
+    plt.title(f"regione {bin}")
+    plt.show()
 
     # extract regions properties
     regions = regionprops(label_image)
@@ -110,15 +111,15 @@ for bin in range(n_bins):
 res = pd.DataFrame.from_dict(result)
 res.to_csv('result.csv')
 
-# mi prendo le 5 componenti più vicine per costruire il grafo
+# mi prendo le 5 componenti più vicine (basate su disyance()) per costruire il grafo
 model = NearestNeighbors(n_neighbors=5, metric=distance)
-model.fit(res[['centroide_x', 'centroide_y']])
+model.fit(res[['centroide_x', 'centroide_y']])  # coordinate dei punti
 graph = model.kneighbors_graph(res[['centroide_x', 'centroide_y']])
+# graph = kneighbors_graph(res[['centroide_x', 'centroide_y']], n_neighbors=5, mode='distance').toarray().astype(int)
 
 # 0.1 (10% dell'immagine): mi prendo le componenti più vicine a distanza normalizzata di 0.1
-#graph = model.radius_neighbors_graph(res[['centroide_x', 'centroide_y']], radius=0.1)
+# graph = model.radius_neighbors_graph(res[['centroide_x', 'centroide_y']], radius=0.1)
 
-#graph = kneighbors_graph(res[['centroide_x', 'centroide_y']], n_neighbors=5, mode='distance').toarray().astype(int)
 pd.DataFrame(graph).to_csv('graph.csv', header=False)
 
 # create a graph with networkx
@@ -128,7 +129,7 @@ nx.set_node_attributes(G, node_features)
 # salvo il grafo con pickle
 with open("grafo.nx", 'wb') as f:
     pkl.dump(G, f)
-    #G = pkl.load(f)
+    # G = pkl.load(f)
     nx.draw(G)
     plt.show()
     print("DONE")
