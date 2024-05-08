@@ -1,24 +1,12 @@
 from tqdm import tqdm
-import pickle as pkl
-import networkx as nx
 import numpy as np
 from PIL import Image
 from skimage.color import rgb2gray
 from skimage.feature import SIFT, ORB
-from sklearn.neighbors import NearestNeighbors
 import os
+import matplotlib.pyplot as plt
 from skimage import morphology
 from skimage import exposure
-
-
-#%% functions
-def distance(a, b):  # distanza minima tra due punti
-
-    return abs(a[0] - b[0]) + np.min(np.abs([a[1] - b[1],
-                                             a[1] - (b[1] + 1),
-                                             (a[1] + 1) - b[1]
-                                             ]))
-
 
 def normalize(dist, image):
     h, w = image.shape
@@ -27,6 +15,8 @@ def normalize(dist, image):
     res[:, 1] /= w
     return res
 
+
+plt.ioff()  # Disattiva la modalità interattiva di matplotlib
 
 #%% estraggo i soggetti
 
@@ -45,27 +35,12 @@ for c in tqdm(range(1, 261)):  #ciclo i soggetti
             image = morphology.diameter_opening(image, diameter_threshold=32)
 
             descriptor_extractor = SIFT()
-            #descriptor_extractor = ORB()
-
             descriptor_extractor.detect_and_extract(image)
             keypoints1 = descriptor_extractor.keypoints
             descriptors1 = descriptor_extractor.descriptors
 
-            normalized = normalize(keypoints1, image)
-
-            #k = min(5, normalized.shape[0] - 1)
-
-            model = NearestNeighbors(n_neighbors=5, metric=distance)
-            model.fit(normalized)  # coordinate dei punti
-
-            # 0.1 (10% dell'immagine): mi prendo le componenti più vicine a distanza normalizzata di 0.1
-            graph = model.radius_neighbors_graph(radius=0.3)
-            graph1 = model.kneighbors_graph(n_neighbors=2)
-            graph = np.maximum(graph.toarray(), graph1.toarray())
-
-            G = nx.from_numpy_array(graph)
-            node_attr = {i: descriptors1[i, :] for i in range(descriptors1.shape[0])}
-            nx.set_node_attributes(G, descriptors1, 'feature')
-
-            with open(f'grafi/C{c}_S{s}_I{i}.pkl', 'wb') as f:
-                pkl.dump(G, f)
+            plt.gray()
+            plt.imshow(image)
+            plt.scatter(keypoints1[:, 1], keypoints1[:, 0], s=6, color='red')
+            plt.savefig(f'descriptors_SIFT/C{c}_S{s}_I{i}.png')
+            plt.close()

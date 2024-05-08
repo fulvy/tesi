@@ -29,11 +29,11 @@ for k in graph_dict.keys():
     s = int(k.split('_')[1][1])
     c.append(int(k.split('_')[0][1:]))
 
-#pca = KernelPCA(n_components=2, kernel='cosine')
-pca = PCA(n_components=2)
+pca = KernelPCA(n_components=2, kernel='cosine')
+#pca = PCA(n_components=2)
 embeddings_2d = pca.fit_transform(np.concatenate(emb))
 
-plt.scatter(embeddings_2d[:, 0], embeddings_2d[:, 1], c=c, cmap='tab20')  # 20 cluster max
+plt.scatter(embeddings_2d[:, 0], embeddings_2d[:, 1], c=c, cmap='tab20')
 plt.title("Graph2Vec embedding")
 plt.xlabel("Dimension 1")
 plt.ylabel("Dimension 2")
@@ -42,6 +42,6 @@ plt.show()
 #%% calcolo silhouette_score
 from sklearn.metrics import silhouette_score
 
-silhouette = silhouette_score(np.concatenate(emb), c)
+silhouette = silhouette_score(np.concatenate(emb), c, metric='cosine')
 print(silhouette)  #-0.3638413 metric='cosine'
-#-0.18333729
+                   #-0.18333729
