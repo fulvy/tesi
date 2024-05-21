@@ -46,9 +46,9 @@ from sklearn.metrics import silhouette_score
 
 silhouette = silhouette_score(np.concatenate(emb), c, metric='cosine')
 print(silhouette)
-
                    #-0.18445517 kernel pca
                    #-0.1824845  pca
+
 
 #%%
 from sklearn.cluster import KMeans
@@ -58,7 +58,24 @@ cluster = KMeans(n_clusters=60, random_state=0).fit_predict(np.concatenate(emb))
 np.random.seed(123)
 rand = [np.random.randint(0,59) for _ in range(cluster.shape[0])]
 
+"""
+Metrica per valutare la qualità della clusterizzazione, bilanciando l'omogeneità e la completezza.
+Questa metrica è indipendente dai valori assoluti delle etichette: 
+una permutazione dei valori delle etichette della classe o del cluster non modificherà in alcun modo il valore del punteggio.
+Questa metrica è inoltre simmetrica: il passaggio label_true con label_pred restituirà lo stesso valore.
+Ciò può essere utile per misurare l'accordo di due strategie di assegnazione di etichette indipendenti sullo stesso set di dati 
+quando il "real ground truth" non è nota.
+"""
 
 v_score = v_measure_score(c, cluster)
 v_score_rand = v_measure_score(c, rand)
-print((f"v_score: {v_score} random: {v_score_rand}"))
+print(f"v_score: {v_score} --- random v_score: {v_score_rand}")
+#v_score: 0.30231617598101374 --- random v_score: 0.31693013884703486
+
+"""
+La randomizzazione serve per avere un termine di confronto. 
+La misura di v per i cluster casuali fornisce un benchmark o un punto di riferimento che indica 
+quale sarebbe il valore della metrica se i cluster fossero completamente casuali. 
+Confrontando la V-measure dei cluster reali con quella dei cluster casuali, può valutare quanto 
+meglio (o peggio) la clusterizzazione effettiva sta performando rispetto ad una pura assegnazione casuale
+"""
