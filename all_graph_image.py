@@ -35,7 +35,7 @@ def normalize(dist, image):
 
 #%% estraggo i soggetti
 
-for c in tqdm(range(1, 261)):  #ciclo i soggetti
+for c in tqdm(range(1, 51)):  #ciclo i soggetti
     for s in [1, 2]:  #solo un occhio [1], altrimenti se voglio fare S1 e S2: for s in (1,2)
         for i in range(1, 16):  #ciclo l'indice
             curr = f'UBIRISv2/CLASSES_400_300_Part1/Iridi/C{c}_S{s}_I{i}.png'
@@ -98,5 +98,5 @@ for c in tqdm(range(1, 261)):  #ciclo i soggetti
                         plt.plot(cy, cx, color='blue')
                         pass
 
-            plt.savefig(f'graph_image_ORB/C{c}_S{s}_I{i}.png')
+            plt.savefig(f'graph_image_SIFT/C{c}_S{s}_I{i}.png')
             plt.clf()

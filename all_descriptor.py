@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from skimage import morphology
 from skimage import exposure
 
+
 def normalize(dist, image):
     h, w = image.shape
     res = dist.astype(float)
@@ -20,7 +21,7 @@ plt.ioff()  # Disattiva la modalità interattiva di matplotlib
 
 #%% estraggo i soggetti
 
-for c in tqdm(range(1, 261)):  #ciclo i soggetti
+for c in tqdm(range(1, 51)):  #ciclo i soggetti
     for s in [1, 2]:  #solo un occhio [1], altrimenti se voglio fare S1 e S2: for s in (1,2)
         for i in range(1, 16):  #ciclo l'indice
             curr = f'UBIRISv2/CLASSES_400_300_Part1/Iridi/C{c}_S{s}_I{i}.png'

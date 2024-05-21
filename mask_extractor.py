@@ -8,7 +8,6 @@ from mask import *
 
 best_folder = "C:\\Users\\fulvi\\DataspellProjects\\tesi\\UBIRISv2\\CLASSES_400_300_Part1\\Best"
 mask_folder = "C:\\Users\\fulvi\\DataspellProjects\\tesi\\UBIRISv2\\CLASSES_400_300_Part1\\Maschere"
-#output_folder = "C:\\Users\\fulvi\\DataspellProjects\\tesi\\UBIRISv2\\CLASSES_400_300_Part1\\Mask_Descriptors"
 
 #%% ciclo su ogni immagine nella cartella Best
 for filename in os.listdir(best_folder):
@@ -20,9 +19,12 @@ for filename in os.listdir(best_folder):
         masked_image = mask.apply_mask(iride_image, mask_image)
 
         descriptor_extractor = SIFT()
-        descriptor_extractor.detect_and_extract(masked_image)
-        keypoints = descriptor_extractor.keypoints
-        descriptors = descriptor_extractor.descriptors
+        try:
+            descriptor_extractor.detect_and_extract(masked_image)
+            keypoints = descriptor_extractor.keypoints
+            descriptors = descriptor_extractor.descriptors
+        except Exception as e:
+            continue
 
         plt.figure()
         plt.imshow(masked_image, cmap='gray')

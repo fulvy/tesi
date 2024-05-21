@@ -17,7 +17,7 @@ from skimage.exposure import rescale_intensity
 plt.gray()  # only for visualization
 
 image = Image.open(
-    "C:\\Users\\fulvi\\DataspellProjects\\tesi\\UBIRISv2\\CLASSES_400_300_Part1\\Iridi\\C1_S1_I1.png").convert("RGB")
+    "C:\\Users\\fulvi\\DataspellProjects\\tesi\\UBIRISv2\\CLASSES_400_300_Part1\\Iridi\\0000_002.png").convert("RGB")
 
 image = rgb2gray(image)  # grayscale
 
@@ -81,8 +81,7 @@ graph = model.radius_neighbors_graph(radius=0.3)
 graph1 = model.kneighbors_graph(n_neighbors=2)
 graph = np.maximum(graph.toarray(), graph1.toarray())
 
-#%%
-pd.DataFrame(graph).to_csv('graph_test.csv', header=False)
+#pd.DataFrame(graph).to_csv('graph_test.csv', header=False)
 
 #%% grafo
 

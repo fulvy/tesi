@@ -7,20 +7,25 @@ from sklearn.decomposition import KernelPCA, PCA
 
 #%% carico i grafi
 graph_dict = {}
-for filename in os.listdir('grafi'):
+
+for filename in os.listdir('/grafi'):
+#for file in os.path.isfile():
     with open('grafi/' + filename, 'rb') as f:
         graph = pkl.load(f)
         graph_dict[filename] = graph
 
-# %% embedding con graph2vec con parametri di default
+#%% embedding con graph2vec con parametri di default
 graph2vec_model = Graph2Vec()
 #graph2vec_model = WaveletCharacteristic()
 
 # fitto il modello sul  grafo
 graph2vec_model.fit(list(graph_dict.values()))
+
 # ottengo l'embedding del grafo
 embeddings = {k: graph2vec_model.infer([graph_dict[k]]) for k in graph_dict.keys()}
 
+
+"""
 #%% riduco l'embedding a due dimensioni con la PCA
 emb = []
 c = []
@@ -45,3 +50,4 @@ from sklearn.metrics import silhouette_score
 silhouette = silhouette_score(np.concatenate(emb), c, metric='cosine')
 print(silhouette)  #-0.3638413 metric='cosine'
                    #-0.18333729
+"""
