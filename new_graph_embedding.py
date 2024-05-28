@@ -3,6 +3,7 @@ import pickle as pkl
 import matplotlib.pyplot as plt
 import numpy as np
 from karateclub import Graph2Vec, WaveletCharacteristic
+from scipy.io import savemat
 from sklearn.decomposition import KernelPCA, PCA
 
 #%% carico i grafi
@@ -42,7 +43,7 @@ plt.ylabel("Dimension 2")
 plt.show()
 
 #%% calcolo silhouette_score
-from sklearn.metrics import silhouette_score
+from sklearn.metrics import silhouette_score, pairwise_distances
 
 silhouette = silhouette_score(np.concatenate(emb), c, metric='cosine')
 print(silhouette)
@@ -72,6 +73,7 @@ v_score_rand = v_measure_score(c, rand)
 print(f"v_score: {v_score} --- random v_score: {v_score_rand}")
 #v_score: 0.30231617598101374 --- random v_score: 0.31693013884703486
 
+
 """
 La randomizzazione serve per avere un termine di confronto. 
 La misura di v per i cluster casuali fornisce un benchmark o un punto di riferimento che indica 
@@ -79,3 +81,17 @@ quale sarebbe il valore della metrica se i cluster fossero completamente casuali
 Confrontando la V-measure dei cluster reali con quella dei cluster casuali, può valutare quanto 
 meglio (o peggio) la clusterizzazione effettiva sta performando rispetto ad una pura assegnazione casuale
 """
+
+
+#%% matrice delle distanze tutti-contro-tutti
+from sklearn.metrics import pairwise_distances
+from scipy.io import savemat
+
+embedding_array = np.concatenate(emb)
+print(type(embedding_array))
+distance_matrix = pairwise_distances(embedding_array, metric='euclidean')
+
+print("Matrice di distanza (dimensione):", distance_matrix.shape)
+print("Diagonale della matrice di distanza (dovrebbe essere 0):", np.diag(distance_matrix))
+
+savemat('distance_matrix.mat', {'distance_matrix': distance_matrix})
