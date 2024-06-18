@@ -91,7 +91,27 @@ embedding_array = np.concatenate(emb)
 print(type(embedding_array))
 distance_matrix = pairwise_distances(embedding_array, metric='euclidean')
 
-print("Matrice di distanza (dimensione):", distance_matrix.shape)
-print("Diagonale della matrice di distanza (dovrebbe essere 0):", np.diag(distance_matrix))
+print(f"Dimensione DM {distance_matrix.shape}")
+print(f"Diagonale DM (dovrebbe essere 0): {np.diag(distance_matrix)}")
 
 savemat('distance_matrix.mat', {'distance_matrix': distance_matrix})
+
+
+#%% negata della DM
+negated_distance_matrix = -distance_matrix
+
+print(f"Dimensione -DM {negated_distance_matrix.shape}")
+print(f"Diagonale -DM: {np.diag(negated_distance_matrix)}")
+
+savemat('negated_distance_matrix.mat', {'negated_distance_matrix': negated_distance_matrix})
+
+
+#%% Normalizzare la matrice delle distanze negate
+min_value = np.min(negated_distance_matrix)
+max_value = np.max(negated_distance_matrix)
+norm_negated_distance_matrix = (negated_distance_matrix - min_value) / (max_value - min_value)
+
+print(f"Dimensione norm_negated_DM {norm_negated_distance_matrix.shape}")
+print(f"Diagonale norm_negated_DM: {np.diag(norm_negated_distance_matrix)}")
+
+savemat('norm_negated_distance_matrix.mat', {'norm_negated_distance_matrix': norm_negated_distance_matrix})
