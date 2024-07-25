@@ -1,71 +1,74 @@
+import numpy as np
 from tqdm import tqdm
 import pickle as pkl
 import networkx as nx
-import numpy as np
-from PIL import Image
-from skimage.color import rgb2gray
-from skimage.feature import SIFT, ORB
-from sklearn.neighbors import NearestNeighbors
+import pandas as pd
+from sklearn.neighbors import NearestNeighbors, radius_neighbors_graph
+from sklearn.metrics import pairwise_distances
 import os
-from skimage import morphology
-from skimage import exposure
 
 
-#%% functions
-def distance(a, b):  # distanza minima tra due punti
+#%% EXTRACT GRAPHS WITH NearestNeighbors()
+in_dir = f'/Users/fulvi/DataspellProjects/tesi/casia_graph_txt/'
+out_dir = f'/Users/fulvi/DataspellProjects/tesi/casia_graph_pkl_nn/'
 
-    return abs(a[0] - b[0]) + np.min(np.abs([a[1] - b[1],
-                                             a[1] - (b[1] + 1),
-                                             (a[1] + 1) - b[1]
-                                             ]))
+columns = ["X", "Y"] + [f'd{i + 1}' for i in range(13)]
+
+for f_name in tqdm(os.listdir(in_dir)):
+    out_file = out_dir + f_name.replace('.txt', '.pkl')
+    df = pd.read_csv(in_dir + f_name, delimiter=" ", header=None, names=columns, skiprows=1, index_col=False)
+
+    model = NearestNeighbors(n_neighbors=5)
+    model.fit(df[['X', 'Y']])
+    graph = model.kneighbors_graph()
+
+    G = nx.from_numpy_array(graph)
+    node_attr = {i: df.iloc[i, 2:].to_numpy().flatten() for i in range(df.shape[0])}
+    nx.set_node_attributes(G, node_attr, 'feature')
+
+    with open(out_file, 'wb') as f:
+        pkl.dump(G, f)
 
 
-def normalize(dist, image):
-    h, w = image.shape
-    res = dist.astype(float)
-    res[:, 0] /= w
-    res[:, 1] /= w
-    return res
+
+#%% EXTRACT GRAPHS WITH radius_neighbors_graph()
+in_dir = f'/Users/fulvi/DataspellProjects/tesi/casia_graphs_txt/'
+out_dir = f'/Users/fulvi/DataspellProjects/tesi/casia_graphs_pkl_radius/'
+
+columns = ["X", "Y"] + [f'd{i + 1}' for i in range(13)]
+
+for f_name in tqdm(os.listdir(in_dir)):
+    out_file = out_dir + f_name.replace('.txt', '.pkl')
+    df = pd.read_csv(in_dir + f_name, delimiter=" ", header=None, names=columns, skiprows=1, index_col=False)
+
+    DM = pairwise_distances(df[['X', 'Y']], metric='euclidean')
+    radius = np.quantile([DM[i, j] for i in range(DM.shape[0]) for j in range(i, DM.shape[1])], 0.05)
+    # determina il 5° percentile delle distanze (usato come raggio per i vicini più prossimi)
+
+    nn = NearestNeighbors()
+    nn.fit(df[['X', 'Y']])
+    graph = nn.kneighbors_graph(n_neighbors=1, mode='distance').todense()
+    graph1 = nn.radius_neighbors_graph(radius=radius, mode='distance').todense()
+    graph = np.maximum(graph, graph1)
+    """Creo due grafi dei vicini più prossimi: 
+       graph con un solo vicino più prossimo per ogni punto
+       graph1 con tutti i vicini entro il raggio calcolato
+       Combina i due grafi prendendo il massimo delle distanze per ciascuna coppia di punti
+    """
+
+    G = nx.from_numpy_array(graph)
+    node_attr = {i: df.iloc[i, 2:].to_numpy().flatten() for i in range(df.shape[0])}
+    nx.set_node_attributes(G, node_attr, 'feature')
+
+    with open(out_file, 'wb') as f:
+        pkl.dump(G, f)
 
 
-#%% estraggo i soggetti
+#%%
+import pandas as pd
 
-for c in tqdm(range(1, 261)):  #ciclo i soggetti
-    for s in [1, 2]:  #solo un occhio [1], altrimenti se voglio fare S1 e S2: for s in (1,2)
-        for i in range(1, 16):  #ciclo l'indice
-            curr = f'UBIRISv2/CLASSES_400_300_Part1/Iridi/C{c}_S{s}_I{i}.png'
-            if not os.path.isfile(curr):
-                print(curr + ' not exists')
-                continue
-            image = Image.open(curr).convert("RGB")
-            image = rgb2gray(image)  # grayscale
+path1 = f'/Users/fulvi/DataspellProjects/tesi/casia_graphs_txt/0000_000.txt'
+path2 = f'/Users/fulvi/DataspellProjects/tesi/casia_graphs_txt/0004_013.txt'
 
-            p1, p2 = np.percentile(image, [2, 90])
-            image = exposure.rescale_intensity(image, in_range=(p1, p2))
-            image = morphology.diameter_opening(image, diameter_threshold=32)
-
-            descriptor_extractor = SIFT()
-            #descriptor_extractor = ORB()
-
-            descriptor_extractor.detect_and_extract(image)
-            keypoints1 = descriptor_extractor.keypoints
-            descriptors1 = descriptor_extractor.descriptors
-
-            normalized = normalize(keypoints1, image)
-
-            #k = min(5, normalized.shape[0] - 1)
-
-            model = NearestNeighbors(n_neighbors=5, metric=distance)
-            model.fit(normalized)  # coordinate dei punti
-
-            # 0.1 (10% dell'immagine): mi prendo le componenti più vicine a distanza normalizzata di 0.1
-            graph = model.radius_neighbors_graph(radius=0.3)
-            graph1 = model.kneighbors_graph(n_neighbors=2)
-            graph = np.maximum(graph.toarray(), graph1.toarray())
-
-            G = nx.from_numpy_array(graph)
-            node_attr = {i: descriptors1[i, :] for i in range(descriptors1.shape[0])}
-            nx.set_node_attributes(G, descriptors1, 'feature')
-
-            with open(f'grafi/C{c}_S{s}_I{i}.pkl', 'wb') as f:
-                pkl.dump(G, f)
+test1 = pd.read_csv(path1, delimiter=" ", header=None, skiprows=1, index_col=False)
+test2 = pd.read_csv(path2, delimiter=" ", header=None, skiprows=1, index_col=False)

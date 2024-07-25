@@ -7,14 +7,14 @@ from sklearn.model_selection import cross_validate
 from sklearn.metrics.pairwise import pairwise_distances
 from sklearn.preprocessing import normalize
 
-#%% caricamento grafi
+#%% caricamento grafi_old
 graph_dict = {}
-for filename in os.listdir('grafi'):
-    with open('grafi/' + filename, 'rb') as f:
+for filename in os.listdir('grafi_old'):
+    with open('grafi_old/' + filename, 'rb') as f:
         graph = pkl.load(f)
         graph_dict[filename] = graph
 
-# embedding dei grafi (parametri di default)
+# embedding dei grafi_old (parametri di default)
 graph2vec_model = Graph2Vec()
 graph2vec_model.fit(list(graph_dict.values()))
 
@@ -60,7 +60,7 @@ def svm_distance(x1, x2):
     return svm.predict_proba([x1 * x2])[0,0]
 
 
-#%% carico i grafi dalla GALLERY
+#%% carico i grafi_old dalla GALLERY
 graph_dict = {}
 
 for filename in os.listdir('gallery_grafi'):
@@ -78,7 +78,7 @@ for k in graph_dict.keys():
     emb_gallery.append(embeddings[k])
     c_gallery.append(int(k.split('_')[0]))
 
-#%% carico i grafi del PROBE
+#%% carico i grafi_old del PROBE
 graph_dict = {}
 
 for filename in os.listdir('probe_grafi'):
