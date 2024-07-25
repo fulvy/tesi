@@ -1,0 +1,43 @@
+
+how to test un sistema biometrico? 60 soggetti totali = 1200 embedding. 20 soggetti di test (ripartiti 10 gallery,
+i cristiani registrati e 10 in probe). Per ogni soggetto del probe, che sono quelli che deve verificare il sistema di riconoscimento,
+mi calcolo gli embedding: mi calcolo la distanza tra questo embedding del probe contro tutti gli altri che stanno nella gallery e faccio
+una DM. Questa DM deve andare in pasto allo script di Riccio San. Mi plotto le curve di FAR e FRR, dove si toccano queste due curve è la
+soglia ottima di dstanza da considerare (è proprio l'EER!).
+Fase di validation: cambio degli iperparametri e devo farlo con dei dati che non ho visto nel training e che non userò nel testing (?)
+altrimenti  => information leaking! per scegliere degli iperparametri devo fare questo testing e trovare gli iperparametri migliori che
+mi danno il testing migliore; MA poi questi soggetti che ho usato per scegliere questi iperparametri non devo usarli nella fase di testing
+finale!
+Al posto di usare 40 soggetti per il training, ne uso 35: i restanti 5  faccio validation (cioè mi testo il sistema con questi
+iperparametri e poi li cambio per vedere quali sono i migliori). Idealmente, durante il training, alla fine di ogni epoca,
+mi faccio un giro di validation e plotto su tensorboard sia le curve di training che le curve di validation contemporaneamente e capisco
+se il sistema sta overfittando, undefittando, se devo fare early stop da qualche parte, drop out, semplificare il modello,
+batch normalization, graph norm, node norm etc......
+
+DOPO aver ricercato gli iperparametri, e ho fatto un training che mi soddisfa, faccio la fase di testing finale che sarà uguale alla
+validation, ma devo cambiare i dati (dati nuovi; magari di quei 5, ne tolgo 3 dal training set e 2 dal test set ma l'importante è che
+sono dati che non verranno usati per il test e per il training).
+L'unico modo per capire cose e sbariare è usare un validation set e capire meglio su dati non visti e usare questo per capire quali sono
+i migliori iperparametri.
+potrei usare un early stopping che prende in input una metrica di validation (es. loss sul validation) e definisco una tolleranza e
+uno scarto: se supera un numero di epoche maggiore della tolleranza e non c'è un miglioramento di metrica > dello scarto => stop training
+(ma si fa sulla base del validation set!)
+discorso batch size: più è alto, più il training è veloce, ma più è basso e meglio le reti generalizzano.
+In questo campo dove tutto è empirico, non c'è una regola; tendenzialmente però un batch size basso porta migliori casi di generalizzazione
+dei modelli (stessa cosa il learning rate!).
+Provare anche ad usare SGD classico (?) Adam è un meccanismo per cambiare i pesi in modo adattivo;
+però c'è un PaPeR che mette a confronto diversi ottimizzatori ed esce fuori che SGD portava a capacità di generalizzazioni maggiori
+(magari usare SGD con il momento).
+
+
+
+localhost di tensorboard: python .\venv\Lib\site-packages\tensorboard\main.py --logdir=runs
+
+DM è una matrice 600 x 600
+Probe = = [ 1 1 1 1.., 2 2 2, ...]
+Gallery = [1 1 1 1..., 2,2,2,2,....]
+SRR = ones(1, length(Probe));
+srr_th=0;
+titolo='Esperimento...'
+
+script riccio in matlab: SystemPerformanceFromDM(-(distance_matrix),c_probe,c_gallery,SRR,srr_th,titolo)
