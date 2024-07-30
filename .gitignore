@@ -1,2 +1,6 @@
 ./venv
-./grafi
+
+./runs
+./plots
+./mat
+./checkpoints
