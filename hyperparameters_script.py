@@ -49,12 +49,12 @@ grid = {
 }
 
 res = {}
-n_iter = 2
+n_iter = 50
 for i in tqdm(range(n_iter), desc='fitting and evaluating models'):  # for n_iter
 
     hyperparameters = sample_hyperparameters(grid)  # sample hyperparameters
     toadd = hyperparameters.copy()  # save hyperparameters for the new entry
-    print(f'hyperparameters: {hyperparameters}')
+    print(f'\nhyperparameters: {hyperparameters}')
     # fittng
     model = FulvioNet(**hyperparameters)
 

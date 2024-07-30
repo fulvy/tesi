@@ -102,18 +102,18 @@ class FulvioNet:
         if self.writer is not None:
             self.writer.add_graph(self.siamese.gnn, [example.x, example.edge_index, example.batch])
 
-        max_eer = -1
+        min_eer = 1
         no_imporvement_since = 0
         for epoch in tqdm(range(self.max_epoch)):
             curr_eer = self.train_one_epoch(train_loader, epoch, gallery_graphs, probe_graphs,
                                             gallery_labels, probe_labels)
 
             #  EARLY STOPPING:
-            if curr_eer < max_eer:  # se c'è un miglioramento
+            if curr_eer < min_eer:  # se c'è un miglioramento
                 print(f'imporvement found in epoch {epoch} with score {curr_eer}, saving model')
                 with open(f'checkpoints/{self.name}_{epoch}.pickle', 'wb') as f:
                     pkl.dump(self.siamese, f)  # salvi il modello
-                max_eer = curr_eer  # aggiorni score migliore
+                min_eer = curr_eer  # aggiorni score migliore
                 no_imporvement_since = 0  # resetti counter
             else:  # nessun miglioramento
                 no_imporvement_since += 1  # incrementi counter
@@ -121,7 +121,7 @@ class FulvioNet:
             if no_imporvement_since > self.tolerance:  # troppe epoche senza miglioramenti!
                 break  # esci
 
-        return max_eer
+        return min_eer
 
     def train_one_epoch(self, train_loader, epoch, gallery_graphs, probe_graphs,
                         gallery_labels, probe_labels):
