@@ -40,7 +40,7 @@ class GNN(torch.nn.Module):
             self.conv1 = TransformerConv(in_channels, hidden_channels // 8, heads=8, concat=True)
             self.conv2 = TransformerConv(hidden_channels, out_channels // 8, heads=8, concat=True)
         else:
-            print('NOT IMPLEMENTED!!!! U GAY')
+            print('NOT IMPLEMENTED!!!!')
             assert 0 == 1
 
         self.fc1 = nn.Linear(out_channels, out_channels)
