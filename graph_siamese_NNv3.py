@@ -4,7 +4,6 @@ from torch_geometric.loader import DataLoader
 from lib.network import *
 from lib.utils import load_graphs, convert_graphs, split_test
 from torch.utils.tensorboard import SummaryWriter
-from hyperparameters_script import *
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -29,6 +28,7 @@ train_set = SiameseGNNDataset(train_graphs, train_labels)
 train_loader = DataLoader(train_set, batch_size=32, shuffle=True)
 
 writer = SummaryWriter()
+
 
 #%% creazione e addestramento del modello
 model = FulvioNet(in_channels=13, hidden_channels=128, out_channels=64, max_epoch=800, margin=1,

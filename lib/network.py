@@ -4,12 +4,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 from sklearn.metrics import silhouette_score
 from torch.utils.data import Dataset
-from torch_geometric.nn import GCNConv, GATv2Conv, TransformerConv, global_mean_pool
+from torch_geometric.nn import GCNConv, GATv2Conv, TransformerConv, PNAConv, global_mean_pool
 from tqdm import tqdm
 import pickle as pkl
 import torch.optim as optim
 from torch.optim.lr_scheduler import StepLR
-from lib.metrics import intra_inter_distance, compute_validation_metrics
+from lib.metrics import compute_validation_metrics
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -30,6 +30,7 @@ class GNN(torch.nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels, layer_type='gcn'):
         super(GNN, self).__init__()
         assert layer_type in ['gcn', 'gat', 'transformer', 'pna']
+
         if layer_type == 'gcn':
             self.conv1 = GCNConv(in_channels, hidden_channels)
             self.conv2 = GCNConv(hidden_channels, out_channels)
@@ -39,6 +40,16 @@ class GNN(torch.nn.Module):
         elif layer_type == 'transformer':
             self.conv1 = TransformerConv(in_channels, hidden_channels // 8, heads=8, concat=True)
             self.conv2 = TransformerConv(hidden_channels, out_channels // 8, heads=8, concat=True)
+        elif layer_type == "pna":
+            aggregators = ['mean']  # sum, min, max
+            scalers = ['identity']  # amplification, attenuation
+
+            self.conv1 = PNAConv(in_channels, hidden_channels, aggregators=aggregators, scalers=scalers,
+                                 deg=torch.as_tensor([0, 0, 0, 0, 1, 0], dtype=torch.long), concat=True)
+            self.conv2 = PNAConv(hidden_channels, out_channels, aggregators=aggregators, scalers=scalers,
+                                 deg=torch.as_tensor([0, 0, 0, 0, 1, 0], dtype=torch.long), concat=True)
+
+
         else:
             print('NOT IMPLEMENTED!!!!')
             assert 0 == 1
@@ -59,7 +70,7 @@ class GNN(torch.nn.Module):
         return x
 
 
-#Definizione del modello Siamese
+# Definizione del modello Siamese
 class SiameseGNN(nn.Module):
     def __init__(self, gnn):
         super(SiameseGNN, self).__init__()

@@ -1,7 +1,10 @@
 import os
 import pickle as pkl
 
+import torch
 from torch_geometric.utils import from_networkx
+from torch_geometric.utils import degree
+
 
 
 def split_test(graphs, labels, train_size):
@@ -55,6 +58,30 @@ def convert_graphs(graphs):
     ret = []
     for g in graphs:
         to_add = from_networkx(g, group_node_attrs=['feature'])
-        to_add.x = to_add.x.float()  #converto le feature dei nodi a float
+        to_add.x = to_add.x.float()  # converto le feature dei nodi a float
         ret.append(to_add)
     return ret
+
+
+"""
+Per calcolare il parametro deg da passare ai layer PNA, devi calcolare 
+il grado di ciascun nodo nel tuo grafo e quindi ottenere la distribuzione dei gradi
+"""
+
+
+def compute_deg(graphs):
+    all_degrees = []
+    for data in graphs:
+        edge_index = data.edge_index[0]  # Ottieni gli indici dei nodi di partenza per ogni grafo
+        deg = degree(edge_index, dtype=torch.long)  # Calcola il grado per ogni nodo
+        all_degrees.append(deg)
+
+    # Ottieni la distribuzione dei gradi per l'intero dataset
+    # Unisci tutti i gradi calcolati in un unico tensor
+    all_degrees = torch.cat(all_degrees, dim=0)
+
+    # Conta la distribuzione dei gradi
+    deg_histogram = torch.bincount(all_degrees)
+
+    return deg_histogram
+
