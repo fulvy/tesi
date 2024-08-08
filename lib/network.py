@@ -45,9 +45,9 @@ class GNN(torch.nn.Module):
             scalers = ['identity']  # amplification, attenuation
 
             self.conv1 = PNAConv(in_channels, hidden_channels, aggregators=aggregators, scalers=scalers,
-                                 deg=torch.as_tensor([0, 0, 0, 0, 1, 0], dtype=torch.long), concat=True)
+                                 deg=torch.as_tensor([0, 0, 0, 0, 240, 0], dtype=torch.long), concat=True)
             self.conv2 = PNAConv(hidden_channels, out_channels, aggregators=aggregators, scalers=scalers,
-                                 deg=torch.as_tensor([0, 0, 0, 0, 1, 0], dtype=torch.long), concat=True)
+                                 deg=torch.as_tensor([0, 0, 0, 0, 240, 0], dtype=torch.long), concat=True)
 
 
         else:
