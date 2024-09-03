@@ -42,12 +42,11 @@ grid = {
     'hidden_channels': [64, 128, 256, 512],
     'out_channels': [64, 128, 256, 512],
     'max_epoch': [1000],
-    'learning_rate': stats.uniform(.0001, .005),
-    'margin': stats.uniform(0, 10),
+    'learning_rate': stats.uniform(.0001, .001),
+    'margin': stats.uniform(1, 8),
     'writer': [None],
     'tolerance': [50],
-    #'layer_type': ['gcn', 'gat', 'transformer', 'pna']
-    'layer_type': ['pna']
+    'layer_type': ['gcn', 'gat', 'transformer', 'pna']
 }
 
 res = {}
