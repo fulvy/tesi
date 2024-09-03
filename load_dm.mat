@@ -1,0 +1,9 @@
+
+load('')
+load('')
+
+SRR = ones(1, length(PROBE_TEST));
+srr_th=0;
+titolo='Esperimento x'
+
+SystemPerformanceFromDM(-(DM_TEST),PROBE_TEST,GALLERY_TEST,SRR,srr_th,titolo)

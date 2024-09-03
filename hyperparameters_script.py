@@ -13,8 +13,9 @@ folder = 'C:/Users/fulvi/DataspellProjects/tesi/casia_graphs_pkl_nn'
 graphs, labels = load_graphs(folder)
 
 (train_graphs, _, _,
- train_labels, _, _) = split_test(graphs, labels, 45)
+ train_labels, _, _) = split_test(graphs, labels, 45) # prendo solo 45 grafi
 
+# 40 nel train 5 nel validation
 (train_graphs, probe_valid_graphs, gallery_valid_graphs,
  train_labels, probe_valid_labels, gallery_valid_labels) = split_test(train_graphs, train_labels, 40)
 

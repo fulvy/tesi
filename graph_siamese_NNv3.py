@@ -1,9 +1,8 @@
-import numpy as np
-from sklearn.metrics import pairwise_distances
-from torch_geometric.loader import DataLoader
-from lib.network import *
-from lib.utils import load_graphs, convert_graphs, split_test
 from torch.utils.tensorboard import SummaryWriter
+from torch_geometric.loader import DataLoader
+
+from lib.network import *
+from lib.utils import load_graphs, convert_graphs, split_test, save_matlab
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -20,8 +19,8 @@ graphs, labels = load_graphs(folder)
  train_labels, probe_valid_labels, gallery_valid_labels) = split_test(train_graphs, train_labels, 40)
 
 #%% creazione del dataset e del DataLoader
-gallery_graphs = convert_graphs(gallery_valid_graphs)
-probe_graphs = convert_graphs(probe_valid_graphs)
+gallery_valid_graphs = convert_graphs(gallery_valid_graphs)
+probe_valid_graphs = convert_graphs(probe_valid_graphs)
 train_graphs = convert_graphs(train_graphs)
 
 train_set = SiameseGNNDataset(train_graphs, train_labels)
@@ -31,21 +30,33 @@ writer = SummaryWriter()
 
 
 #%% creazione e addestramento del modello
-model = FulvioNet(in_channels=13, hidden_channels=128, out_channels=64, max_epoch=800, margin=1,
-                  writer=writer)
+model = FulvioNet(in_channels=13, hidden_channels=128, out_channels=256, max_epoch=1000, margin=4,learning_rate=0.0015,
+                  layer_type='pna', writer=writer)
 
-model.fit(train_loader, gallery_graphs, gallery_valid_labels, probe_graphs, probe_valid_labels)
+model.fit(train_loader, gallery_valid_graphs, gallery_valid_labels, probe_valid_graphs, probe_valid_labels)
 
 #%% embedding del test set e visualizzazione
-gallery_graphs = convert_graphs(gallery_test_graphs)
-probe_graphs = convert_graphs(probe_test_graphs)
+gallery_test_graphs = convert_graphs(gallery_test_graphs)
+probe_test_graphs = convert_graphs(probe_test_graphs)
 
-test_graphs = gallery_graphs + probe_graphs
+test_graphs = gallery_test_graphs + probe_test_graphs
 test_labels = gallery_test_labels + probe_test_labels
 test_embedding = model.transform(test_graphs)
 
 embeddings = torch.Tensor(test_embedding)
 writer.add_embedding(mat=embeddings, metadata=test_labels)
+
+#%%
+
+embedding_probe = model.transform(probe_test_graphs)
+embedding_gallery = model.transform(gallery_test_graphs)
+
+save_matlab('test',embedding_probe,embedding_gallery,probe_test_labels, gallery_test_labels)
+
+embedding_probe = model.transform(probe_test_graphs)
+embedding_gallery = model.transform(gallery_test_graphs)
+
+save_matlab('valid',embedding_probe,embedding_gallery,probe_valid_labels, gallery_valid_labels)
 
 """
 #%% salva la dm e le etichette in matlab

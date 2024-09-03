@@ -1,10 +1,11 @@
 import os
 import pickle as pkl
-
+from scipy.io import savemat
 import torch
 from torch_geometric.utils import from_networkx
 from torch_geometric.utils import degree
-
+import numpy as np
+from sklearn.metrics.pairwise import pairwise_distances
 
 
 def split_test(graphs, labels, train_size):
@@ -85,3 +86,8 @@ def compute_deg(graphs):
 
     return deg_histogram
 
+
+def save_matlab(experiment_name, dm, probe_label, gallery_label):
+    savemat(f'{experiment_name}_DM.mat', {'DM_TEST': dm})
+    savemat(f'{experiment_name}_PROBE.mat', {'PROBE_TEST': np.array(probe_label)})
+    savemat(f'{experiment_name}_GALLERY.mat', {'GALLERY_TEST': np.array(gallery_label)})

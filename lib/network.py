@@ -90,6 +90,7 @@ class SiameseGNN(nn.Module):
         return output1, output2, output3
 
 
+
 class FulvioNet:
 
     def __init__(self, in_channels=13, hidden_channels=128, out_channels=64, max_epoch=500,
