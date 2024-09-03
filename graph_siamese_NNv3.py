@@ -17,7 +17,7 @@ graphs, labels = load_graphs(folder)
 
 (train_graphs, probe_valid_graphs, gallery_valid_graphs,
  train_labels, probe_valid_labels, gallery_valid_labels) = split_test(train_graphs, train_labels, 40)
-
+print('hey')
 #%% creazione del dataset e del DataLoader
 gallery_valid_graphs = convert_graphs(gallery_valid_graphs)
 probe_valid_graphs = convert_graphs(probe_valid_graphs)
@@ -28,13 +28,13 @@ train_loader = DataLoader(train_set, batch_size=32, shuffle=True)
 
 writer = SummaryWriter()
 
-
+print('hey')
 #%% creazione e addestramento del modello
 model = FulvioNet(in_channels=13, hidden_channels=128, out_channels=256, max_epoch=1000, margin=4,learning_rate=0.0015,
                   layer_type='pna', writer=writer)
 
 model.fit(train_loader, gallery_valid_graphs, gallery_valid_labels, probe_valid_graphs, probe_valid_labels)
-
+print('hey')
 #%% embedding del test set e visualizzazione
 gallery_test_graphs = convert_graphs(gallery_test_graphs)
 probe_test_graphs = convert_graphs(probe_test_graphs)
@@ -45,39 +45,4 @@ test_embedding = model.transform(test_graphs)
 
 embeddings = torch.Tensor(test_embedding)
 writer.add_embedding(mat=embeddings, metadata=test_labels)
-
-#%%
-
-embedding_probe = model.transform(probe_test_graphs)
-embedding_gallery = model.transform(gallery_test_graphs)
-
-save_matlab('test',embedding_probe,embedding_gallery,probe_test_labels, gallery_test_labels)
-
-embedding_probe = model.transform(probe_test_graphs)
-embedding_gallery = model.transform(gallery_test_graphs)
-
-save_matlab('valid',embedding_probe,embedding_gallery,probe_valid_labels, gallery_valid_labels)
-
-"""
-#%% salva la dm e le etichette in matlab
-from scipy.io import savemat
-
-embedding_probe = model.transform(probe_graphs)
-embedding_gallery = model.transform(gallery_graphs)
-dm = pairwise_distances(embedding_probe, embedding_gallery)
-
-savemat('DM_TEST.mat', {'DM_TEST': dm})
-savemat('PROBE_TEST.mat', {'PROBE_TEST': np.array(probe_test_labels)})
-savemat('GALLERY_TEST.mat', {'GALLERY_TEST': np.array(gallery_test_labels)})
-"""
-
-"""
-DM è una matrice 600 x 600
-Probe = [ 1 1 1 1.., 2 2 2, ...]
-Gallery = [1 1 1 1..., 2,2,2,2,....]
-SRR = ones(1, length(Probe));
-srr_th=0;
-titolo='Esperimento...'
-
-SystemPerformanceFromDM(-(distance_matrix),c_probe,c_gallery,SRR,srr_th,titolo)
-"""
+print('hey')

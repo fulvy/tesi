@@ -1,9 +1,19 @@
 
-load('')
-load('')
-
+load('TEST_DM.mat')
+load('TEST_GALLERY.mat')
+load('TEST_PROBE.mat')
 SRR = ones(1, length(PROBE_TEST));
 srr_th=0;
-titolo='Esperimento x'
+titolo='Testing'
 
-SystemPerformanceFromDM(-(DM_TEST),PROBE_TEST,GALLERY_TEST,SRR,srr_th,titolo)
+SystemPerformanceFromDM(DM_TEST,PROBE_TEST,GALLERY_TEST,SRR,srr_th,titolo)
+
+
+load('VALID_DM.mat')
+load('VALID_GALLERY.mat')
+load('VALID_PROBE.mat')
+SRR = ones(1, length(PROBE_TEST));
+srr_th=0;
+titolo='Validation'
+
+SystemPerformanceFromDM(DM_TEST,PROBE_TEST,GALLERY_TEST,SRR,srr_th,titolo)

@@ -30,24 +30,24 @@ class GNN(torch.nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels, layer_type='gcn'):
         super(GNN, self).__init__()
         assert layer_type in ['gcn', 'gat', 'transformer', 'pna']
-
+        self.layer_type = layer_type
         if layer_type == 'gcn':
             self.conv1 = GCNConv(in_channels, hidden_channels)
             self.conv2 = GCNConv(hidden_channels, out_channels)
         elif layer_type == 'gat':
-            self.conv1 = GATv2Conv(in_channels, hidden_channels // 8, heads=8, concat=True)
-            self.conv2 = GATv2Conv(hidden_channels, out_channels // 8, heads=8, concat=True)
+            self.conv1 = GATv2Conv(in_channels, hidden_channels // 8, heads=8, concat=True, edge_dim=1)
+            self.conv2 = GATv2Conv(hidden_channels, out_channels // 8, heads=8, concat=True, edge_dim=1)
         elif layer_type == 'transformer':
-            self.conv1 = TransformerConv(in_channels, hidden_channels // 8, heads=8, concat=True)
-            self.conv2 = TransformerConv(hidden_channels, out_channels // 8, heads=8, concat=True)
+            self.conv1 = TransformerConv(in_channels, hidden_channels // 8, heads=8, concat=True, edge_dim=1)
+            self.conv2 = TransformerConv(hidden_channels, out_channels // 8, heads=8, concat=True, edge_dim=1)
         elif layer_type == "pna":
             aggregators = ['mean']  # sum, min, max
             scalers = ['identity']  # amplification, attenuation
 
             self.conv1 = PNAConv(in_channels, hidden_channels, aggregators=aggregators, scalers=scalers,
-                                 deg=torch.as_tensor([0, 0, 0, 0, 240, 0], dtype=torch.long), concat=True)
+                                 deg=torch.as_tensor([0, 0, 0, 0, 240, 0], dtype=torch.long), edge_dim=1, concat=True)
             self.conv2 = PNAConv(hidden_channels, out_channels, aggregators=aggregators, scalers=scalers,
-                                 deg=torch.as_tensor([0, 0, 0, 0, 240, 0], dtype=torch.long), concat=True)
+                                 deg=torch.as_tensor([0, 0, 0, 0, 240, 0], dtype=torch.long), edge_dim=1, concat=True)
 
 
         else:
@@ -58,10 +58,17 @@ class GNN(torch.nn.Module):
         self.relu = nn.ReLU()
         self.fc2 = nn.Linear(out_channels, out_channels)
 
-    def forward(self, x, edge_index, batch):
-        x = self.conv1(x, edge_index)
+    def forward(self, x, edge_index, edge_attr, batch):
+
+        if self.layer_type == 'gcn':
+            edge_attr = edge_attr.flatten()
+
+        x = self.conv1(x, edge_index, edge_attr)
+
         x = F.relu(x)
-        x = self.conv2(x, edge_index)
+
+        x = self.conv2(x, edge_index, edge_attr)
+
         x = global_mean_pool(x, batch)  # Pooling globale per ottenere una rappresentazione del grafo
         x = self.fc1(x)
         x = self.relu(x)
@@ -81,14 +88,13 @@ class SiameseGNN(nn.Module):
         return ret.detach().cpu().numpy()
 
     def forward_once(self, data):
-        return self.gnn(data.x, data.edge_index, data.batch)
+        return self.gnn(data.x, data.edge_index, data.edge_attr, data.batch)
 
     def forward(self, data1, data2, data3):
         output1 = self.forward_once(data1)
         output2 = self.forward_once(data2)
         output3 = self.forward_once(data3)
         return output1, output2, output3
-
 
 
 class FulvioNet:
@@ -112,7 +118,7 @@ class FulvioNet:
         dataiter = iter(train_loader)
         example, _, _ = next(dataiter)
         if self.writer is not None:
-            self.writer.add_graph(self.siamese.gnn, [example.x, example.edge_index, example.batch])
+            self.writer.add_graph(self.siamese.gnn, [example.x, example.edge_index, example.edge_attr, example.batch])
 
         min_eer = 1
         no_imporvement_since = 0

@@ -58,7 +58,7 @@ def load_graphs(folder):
 def convert_graphs(graphs):
     ret = []
     for g in graphs:
-        to_add = from_networkx(g, group_node_attrs=['feature'])
+        to_add = from_networkx(g, group_node_attrs=['feature'], group_edge_attrs=['weight'])
         to_add.x = to_add.x.float()  # converto le feature dei nodi a float
         ret.append(to_add)
     return ret

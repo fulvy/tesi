@@ -9,8 +9,8 @@ import os
 
 
 #%% EXTRACT GRAPHS WITH NearestNeighbors()
-in_dir = f'/Users/fulvi/DataspellProjects/tesi/casia_graph_txt/'
-out_dir = f'/Users/fulvi/DataspellProjects/tesi/casia_graph_pkl_nn/'
+in_dir = f'/Users/fulvi/DataspellProjects/tesi/casia_graphs_txt/'
+out_dir = f'/Users/fulvi/DataspellProjects/tesi/casia_graphs_pkl_nn/'
 
 columns = ["X", "Y"] + [f'd{i + 1}' for i in range(13)]
 
@@ -20,7 +20,7 @@ for f_name in tqdm(os.listdir(in_dir)):
 
     model = NearestNeighbors(n_neighbors=5)
     model.fit(df[['X', 'Y']])
-    graph = model.kneighbors_graph()
+    graph = model.kneighbors_graph(mode='distance')
 
     G = nx.from_numpy_array(graph)
     node_attr = {i: df.iloc[i, 2:].to_numpy().flatten() for i in range(df.shape[0])}
